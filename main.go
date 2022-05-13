@@ -1,8 +1,13 @@
 package main
 
-import mlog "MoTrade/mo-log"
+import (
+	"MoTrade/core"
+	"MoTrade/global"
+	mlog "MoTrade/mo-log"
+)
 
 var log = mlog.Log
 
 func main() {
+	global.GB_VP = core.Viper("config.yaml")
 }

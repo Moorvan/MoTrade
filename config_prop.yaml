@@ -1,1 +1,6 @@
 
+# get OKX API Key from https://www.okx.com/account/my-api
+api:
+  api-key: xxx
+  api-secret-key: xxxx
+  passphrase: xxx
