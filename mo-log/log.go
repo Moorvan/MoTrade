@@ -29,7 +29,8 @@ func init() {
 
 	var w io.Writer
 	if Debug {
-		w = io.MultiWriter(f, os.Stdout)
+		//w = io.MultiWriter(f, os.Stdout)
+		w = os.Stdout
 	} else {
 		w = f
 	}
