@@ -9,5 +9,5 @@ import (
 var log = mlog.Log
 
 func main() {
-	global.GB_VP = core.Viper("config.yaml")
+	global.GB_VP = core.Viper("config_sim.yaml")
 }
