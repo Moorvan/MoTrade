@@ -22,16 +22,20 @@ func (l logger) Errorln(v ...any) {
 var Log logger
 
 func init() {
-	f, err := os.OpenFile("./output.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(0666))
-	if err != nil {
-		panic(err.Error())
-	}
+	//f, err := os.OpenFile("./output.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(0666))
+	//if err != nil {
+	//	panic(err.Error())
+	//}
 
 	var w io.Writer
 	if Debug {
 		//w = io.MultiWriter(f, os.Stdout)
 		w = os.Stdout
 	} else {
+		f, err := os.OpenFile("./output.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(0666))
+		if err != nil {
+			panic(err.Error())
+		}
 		w = f
 	}
 	Log = logger{Logger: log.New(w, "", log.LstdFlags)}
