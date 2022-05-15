@@ -18,6 +18,7 @@ var (
 
 type Trade struct {
 	Account AccountAPI
+	Market  MarketAPI
 }
 
 type OKX struct {
@@ -43,6 +44,7 @@ func New(conf *APIConfig) *OKX {
 		client: client,
 	}
 	okx.Account = &OKXAccountAPI{okx}
+	okx.Market = &OKXMarketAPI{okx}
 
 	return okx
 }
@@ -63,7 +65,7 @@ func (okx *OKX) DoGet(api string, params Params, response any) error {
 		return err
 	}
 
-	log.Println(resp)
+	//log.Println(resp)
 	if err != nil {
 		log.Errorln("Get Request", api, "FAIL", err.Error())
 		return err
@@ -93,7 +95,7 @@ func checkResponse(resp *resty.Response) error {
 		Msg  string
 	}{}
 	if err := json.Unmarshal([]byte(resp.String()), status); err != nil {
-		log.Fatalln("Unmarshal Fail")
+		log.Fatalln("Can't connect")
 	}
 	if status.Code != 0 {
 		return errors.New("Response with Fail: " + status.Msg)

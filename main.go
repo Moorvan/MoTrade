@@ -6,8 +6,13 @@ import (
 	mlog "MoTrade/mo-log"
 )
 
-var log = mlog.Log
+var (
+	log        = mlog.Log
+	configPath = "config_sim.yaml"
+)
 
 func main() {
-	global.GB_VP = core.Viper("config_sim.yaml")
+	global.GB_VP = core.Viper(configPath)
+	global.GB_Client = core.NewOKX()
+
 }

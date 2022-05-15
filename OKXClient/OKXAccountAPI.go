@@ -8,8 +8,8 @@ import (
 )
 
 type AccountAPI interface {
-	GetBalance([]string) (map[string]float64, error)
-	GetOneBalance(string) (float64, error)
+	GetBalance(ccy []string) (map[string]float64, error)
+	GetOneBalance(ccy string) (float64, error)
 	GetAllBalance() (map[string]float64, error)
 }
 
@@ -22,7 +22,7 @@ func (account *OKXAccountAPI) GetBalance(ccy []string) (map[string]float64, erro
 	currencys := strings.Join(ccy, ",")
 	params := ParamsBuilder().Set("ccy", currencys)
 
-	response := struct {
+	response := &struct {
 		Data []struct {
 			Details []struct {
 				Ccy string
@@ -30,7 +30,7 @@ func (account *OKXAccountAPI) GetBalance(ccy []string) (map[string]float64, erro
 			}
 		}
 	}{}
-	err := account.DoGet(api, params, &response)
+	err := account.DoGet(api, params, response)
 	if err != nil {
 		log.Errorln("GetBalance of " + api + " Failed: " + err.Error())
 		return nil, errors.New("GetBalance of " + api + " Failed: " + err.Error())

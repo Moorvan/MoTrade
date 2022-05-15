@@ -1,6 +1,7 @@
 package global
 
 import (
+	"MoTrade/OKXClient"
 	"MoTrade/config"
 	"github.com/spf13/viper"
 )
@@ -8,4 +9,5 @@ import (
 var (
 	GB_VP     *viper.Viper
 	GB_CONFIG config.Config
+	GB_Client *OKXClient.OKX
 )
