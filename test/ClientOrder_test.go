@@ -77,7 +77,7 @@ func TestClosePositionApi(t *testing.T) {
 	}{
 		InstId:  OKXClient.DOGE_USDT_SWAP,
 		PosSide: OKXClient.SHORT,
-		MgnMode: OKXClient.ISOLATED,
+		MgnMode: OKXClient.CROSS,
 	}
 	response := &struct {
 		Data any
