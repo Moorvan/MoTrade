@@ -4,9 +4,7 @@ import (
 	"MoTrade/OKXClient"
 	"MoTrade/core"
 	mlog "MoTrade/mo-log"
-	"strconv"
 	"testing"
-	"time"
 )
 
 var (
@@ -23,22 +21,24 @@ func init() {
 	client = core.NewOKX()
 }
 
-func TestApi(t *testing.T) {
+func TestTickerApi(t *testing.T) {
+	api := "/api/v5/market/ticker"
 	response := &struct {
-		Data [][]string
+		Data any
 	}{}
-	ts := time.Now().Add(-5 * time.Minute).UnixMilli()
-	params := OKXClient.ParamsBuilder().Set("instId", OKXClient.DOGE_USDT_SWAP).Set("limit", "20").Set("after", strconv.FormatInt(ts, 10))
-	if err := client.DoGet("/api/v5/market/candles", params, response); err != nil {
+	params := OKXClient.ParamsBuilder().Set("instId", OKXClient.DOGE_USDT_SWAP)
+	if err := client.DoGet(api, params, response); err != nil {
 		log.Fatalln(err.Error())
 	}
-	//log.Println(response.Data)
-	for _, v := range response.Data {
-		t, _ := strconv.Atoi(v[0])
-		log.Println(time.UnixMilli(int64(t)))
-		v, _ := strconv.ParseFloat(v[4], 64)
-		log.Println(v)
+	log.Println(response)
+}
+
+func TestGetTickerValue(t *testing.T) {
+	data, err := client.Market.GetTickerValue(OKXClient.DOGE_USDT_SWAP)
+	if err != nil {
+		log.Fatalln(err.Error())
 	}
+	log.Println(data)
 }
 
 func TestRequestMA(t *testing.T) {
