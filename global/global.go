@@ -9,5 +9,5 @@ import (
 var (
 	GB_VP     *viper.Viper
 	GB_CONFIG config.Config
-	GB_Client *OKXClient.OKX
+	GB_CLIENT *OKXClient.OKX
 )

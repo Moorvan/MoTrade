@@ -13,6 +13,6 @@ var (
 
 func main() {
 	global.GB_VP = core.Viper(configPath)
-	global.GB_Client = core.NewOKX()
+	global.GB_CLIENT = core.NewOKX()
 
 }
