@@ -1,18 +1,22 @@
 package OKXClient
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 type MarketAPI interface {
-	GetMA(instId, bar string, limit int) (float64, error)
+	GetMA(instId, bar string, limit int, before time.Duration) (float64, error)
 }
 
 type OKXMarketAPI struct {
 	*OKX
 }
 
-func (market OKXMarketAPI) GetMA(instId, bar string, limit int) (float64, error) {
+func (market OKXMarketAPI) GetMA(instId, bar string, limit int, before time.Duration) (float64, error) {
 	api := "/api/v5/market/candles"
-	params := ParamsBuilder().Set("instId", instId).Set("bar", bar).Set("limit", strconv.Itoa(limit))
+	ts := time.Now().Add(-1 * before).UnixMilli()
+	params := ParamsBuilder().Set("instId", instId).Set("bar", bar).Set("limit", strconv.Itoa(limit)).Set("after", strconv.FormatInt(ts, 10))
 
 	response := &struct {
 		Data [][]string

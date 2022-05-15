@@ -27,7 +27,8 @@ func TestApi(t *testing.T) {
 	response := &struct {
 		Data [][]string
 	}{}
-	params := OKXClient.ParamsBuilder().Set("instId", OKXClient.DOGE_USDT_SWAP).Set("limit", "20")
+	ts := time.Now().Add(-5 * time.Minute).UnixMilli()
+	params := OKXClient.ParamsBuilder().Set("instId", OKXClient.DOGE_USDT_SWAP).Set("limit", "20").Set("after", strconv.FormatInt(ts, 10))
 	if err := client.DoGet("/api/v5/market/candles", params, response); err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -41,7 +42,7 @@ func TestApi(t *testing.T) {
 }
 
 func TestRequestMA(t *testing.T) {
-	data, err := client.Market.GetMA(OKXClient.DOGE_USDT_SWAP, OKXClient.MINUTE_1, 10)
+	data, err := client.Market.GetMA(OKXClient.DOGE_USDT_SWAP, OKXClient.MINUTE_1, 20, 1)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
