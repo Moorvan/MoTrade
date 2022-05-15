@@ -76,10 +76,21 @@ func (okx *OKX) DoGet(api string, params Params, response any) error {
 
 func (okx *OKX) DoPost(api string, body, response any) error {
 	req := okx.client.R()
-	okx.updateHeadersWithNowTime(req, "POST", api)
+	s, err := json.Marshal(body)
+	if err != nil {
+		log.Errorln("Marshal Request", api, "FAIL", err.Error())
+		return err
+	}
+	okx.updateHeadersWithNowTime(req, "POST", api+string(s))
+	//log.Println("Post Headers:", req.Header)
+	//log.Println("Post Headers:", okx.client.Header)
 
 	resp, err := req.SetBody(body).SetResult(response).Post(baseUrl + api)
 	log.Println(resp)
+
+	if err := checkResponse(resp); err != nil {
+		return err
+	}
 
 	if err != nil {
 		log.Errorln("Post Request", api, "FAIL:", err.Error())

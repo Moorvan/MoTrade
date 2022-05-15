@@ -25,3 +25,29 @@ const (
 	HOUR_2    = "2h"
 	HOUR_4    = "4h"
 )
+
+// Trade Mode
+const (
+	ISOLATED = "isolated"
+	CROSS    = "cross"
+	CASH     = "cash"
+)
+
+// Side
+const (
+	BUY  = "buy"
+	SELL = "sell"
+)
+
+// position side
+const (
+	LONG  = "long"
+	SHORT = "short"
+	NET   = "net"
+)
+
+// Order Type
+const (
+	LIMIT  = "limit"
+	MARKET = "market"
+)
