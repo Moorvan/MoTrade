@@ -1,6 +1,7 @@
 package OKXClient
 
 import (
+	"MoTrade/OKXClient/models"
 	"errors"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ type MarketAPI interface {
 	CancelOrder(instId, ordId string) error
 	ClosePosition(instId, posSide, tradeMode string) error
 	GetTickerValue(instId string) (float64, error)
+	GetOrderInfo(instId, ordId string) (*models.OrderInfo, error)
 }
 
 type OKXMarketAPI struct {
@@ -106,16 +108,16 @@ func (market *OKXMarketAPI) CancelOrder(instId, ordId string) error {
 		}
 	}{}
 	if err := market.DoPost(api, request, response); err != nil {
-		log.Errorln("CancelOrder error:", err.Error())
+		log.Println("CancelOrder error:", err.Error())
 		return err
 	}
 	if len(response.Data) == 0 {
-		log.Errorln("CancelOrder error:", errors.New("response data is empty"))
+		log.Println("CancelOrder error:", errors.New("response data is empty"))
 		return errors.New("CancelOrder response data is empty")
 	}
 	data := response.Data[0]
 	if data.SCode != "0" {
-		log.Errorln("CancelOrder error:", errors.New(data.SMsg))
+		log.Println("CancelOrder error:", errors.New(data.SMsg))
 		return errors.New(data.SMsg)
 	}
 	return nil
@@ -160,4 +162,37 @@ func (market *OKXMarketAPI) GetTickerValue(instId string) (float64, error) {
 		return 0, errors.New("GetTickerValue response data is empty")
 	}
 	return response.Data[0].Last, nil
+}
+
+func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInfo, error) {
+	api := "/api/v5/trade/order"
+
+	params := ParamsBuilder().Set("instId", instId).Set("ordId", ordId)
+
+	response := &struct {
+		Data []struct {
+			Pnl   float64 `json:"pnl,string"`
+			AvgPx float64 `json:"avgPx,string"`
+			State string  `json:"state"`
+			Fee   float64 `json:"fee,string"`
+			Sz    int     `json:"sz,string"`
+		}
+	}{}
+	if err := market.DoGet(api, params, response); err != nil {
+		log.Errorln("GetOrderInfo error:", err.Error())
+		return nil, err
+	}
+	if len(response.Data) == 0 {
+		log.Errorln("GetOrderInfo error:", errors.New("response data is empty"))
+		return nil, errors.New("GetOrderInfo response data is empty")
+	}
+	//log.Println(response)
+	data := response.Data[0]
+	return &models.OrderInfo{
+		Pnl:   data.Pnl,
+		AvgPx: data.AvgPx,
+		State: data.State,
+		Fee:   data.Fee,
+		Size:  data.Sz,
+	}, nil
 }

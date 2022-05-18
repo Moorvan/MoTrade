@@ -7,6 +7,14 @@ const (
 	USDT = "USDT"
 )
 
+// InstType
+const (
+	SWAP    = "SWAP"
+	SPOT    = "SPOT"
+	MARGIN  = "MARGIN"
+	FUTURES = "FUTURES"
+)
+
 // InstID
 const (
 	DOGE_USDT_SWAP = "DOGE-USDT-SWAP"

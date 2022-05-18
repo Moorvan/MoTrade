@@ -46,6 +46,11 @@ func New(conf *APIConfig) *OKX {
 	okx.Account = &OKXAccountAPI{okx}
 	okx.Market = &OKXMarketAPI{okx}
 
+	// test connection
+	if _, err := okx.Account.GetOneBalance(BTC); err != nil {
+		log.Fatalln("Can't connect to OKX, please check your API key and passphrase")
+	}
+
 	return okx
 }
 
