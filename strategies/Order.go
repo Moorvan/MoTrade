@@ -22,7 +22,9 @@ type Order struct {
 	IsStart      bool
 	IsFinished   bool
 	Profit       float64
+	ApprProfit   float64
 	IsProfitable bool
+	IsProtect    bool
 }
 
 func NewOrder(trade *OKXClient.Trade, instType, instId, tdMode, posSide, ordType string, size int, px float64, timeout time.Duration) (*Order, error) {
@@ -145,6 +147,7 @@ func (order *Order) watchCleanOrder(wait <-chan time.Time) error {
 }
 
 func (order *Order) Protect(maxLoss float64, interval time.Duration) {
+	order.IsProtect = true
 	for {
 		t := time.NewTimer(interval)
 		log.PrintStruct(order)
@@ -191,6 +194,7 @@ func (order *Order) Protect(maxLoss float64, interval time.Duration) {
 		}
 		log.Println("PriceIn:", order.PriceIn, "PriceNow", v, "Fee", fee)
 		log.Println("Now profit:", profit)
+		order.ApprProfit = profit
 		select {
 		case <-t.C:
 			continue

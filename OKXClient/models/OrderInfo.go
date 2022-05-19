@@ -1,4 +1,4 @@
-package models
+package OKXmodels
 
 type OrderInfo struct {
 	Pnl   float64

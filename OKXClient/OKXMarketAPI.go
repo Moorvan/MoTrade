@@ -1,7 +1,7 @@
 package OKXClient
 
 import (
-	"MoTrade/OKXClient/models"
+	OKXmodels "MoTrade/OKXClient/models"
 	"errors"
 	"strconv"
 	"time"
@@ -13,7 +13,7 @@ type MarketAPI interface {
 	CancelOrder(instId, ordId string) error
 	ClosePosition(instId, posSide, tradeMode string) error
 	GetTickerValue(instId string) (float64, error)
-	GetOrderInfo(instId, ordId string) (*models.OrderInfo, error)
+	GetOrderInfo(instId, ordId string) (*OKXmodels.OrderInfo, error)
 	GetTickerUnitSize(instType, instId string) (float64, error)
 }
 
@@ -184,7 +184,7 @@ func (market OKXMarketAPI) GetTickerUnitSize(instType, instId string) (float64, 
 	return response.Data[0].CtVal, nil
 }
 
-func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInfo, error) {
+func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*OKXmodels.OrderInfo, error) {
 	api := "/api/v5/trade/order"
 
 	params := ParamsBuilder().Set("instId", instId).Set("ordId", ordId)
@@ -219,7 +219,7 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInf
 	} else {
 		avgPx = 0
 	}
-	return &models.OrderInfo{
+	return &OKXmodels.OrderInfo{
 		Pnl:   data.Pnl,
 		AvgPx: avgPx,
 		State: data.State,
