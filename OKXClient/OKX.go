@@ -70,7 +70,7 @@ func (okx *OKX) DoGet(api string, params Params, response any) error {
 		return err
 	}
 
-	log.Println(resp)
+	//log.Println(resp)
 	if err != nil {
 		log.Errorln("Get Request", api, "FAIL", err.Error())
 		return err
@@ -91,7 +91,7 @@ func (okx *OKX) DoPost(api string, body, response any) error {
 	//log.Println("Post Headers:", okx.client.Header)
 
 	resp, err := req.SetBody(body).SetResult(response).Post(baseUrl + api)
-	log.Println(resp)
+	//log.Println(resp)
 
 	if err := checkResponse(resp); err != nil {
 		return err

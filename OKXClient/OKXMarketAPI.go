@@ -14,6 +14,7 @@ type MarketAPI interface {
 	ClosePosition(instId, posSide, tradeMode string) error
 	GetTickerValue(instId string) (float64, error)
 	GetOrderInfo(instId, ordId string) (*models.OrderInfo, error)
+	GetTickerUnitSize(instType, instId string) (float64, error)
 }
 
 type OKXMarketAPI struct {
@@ -162,6 +163,25 @@ func (market *OKXMarketAPI) GetTickerValue(instId string) (float64, error) {
 		return 0, errors.New("GetTickerValue response data is empty")
 	}
 	return response.Data[0].Last, nil
+}
+
+func (market OKXMarketAPI) GetTickerUnitSize(instType, instId string) (float64, error) {
+	api := "/api/v5/public/instruments"
+	params := ParamsBuilder().Set("instType", instType).Set("instId", instId)
+	response := &struct {
+		Data []struct {
+			CtVal float64 `json:"ctVal,string"`
+		}
+	}{}
+	if err := market.DoGet(api, params, response); err != nil {
+		log.Errorln("GetTickerUnitSize error:", err.Error())
+		return 0, err
+	}
+	if len(response.Data) == 0 {
+		log.Errorln("GetTickerUnitSize error:", errors.New("response data is empty"))
+		return 0, errors.New("GetTickerUnitSize response data is empty")
+	}
+	return response.Data[0].CtVal, nil
 }
 
 func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInfo, error) {

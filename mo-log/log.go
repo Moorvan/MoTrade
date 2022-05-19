@@ -27,6 +27,10 @@ func (l logger) Alarm(v ...any) {
 	}
 }
 
+func (l logger) PrintStruct(v any) {
+	l.Logger.Printf("%+v", v)
+}
+
 var Log logger
 
 func init() {
