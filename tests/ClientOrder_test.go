@@ -26,11 +26,12 @@ func TestGetOrdersHistoryApi(t *testing.T) {
 }
 
 func TestPlaceOneOrderAndCancelOrder(t *testing.T) {
-	orderId, err := client.Market.PlaceOrder(OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.BUY, OKXClient.LONG, OKXClient.MARKET, 10, 0)
+	orderId, err := client.Market.PlaceOrder(OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.BUY, OKXClient.LONG, OKXClient.LIMIT, 15, 1915)
 	if err != nil {
 		t.Error(err)
 	}
 	log.Println(orderId)
+	time.Sleep(time.Second)
 	if err := client.Market.CancelOrder(OKXClient.ETH_USDT_SWAP, orderId); err != nil {
 		log.Println("cancel order error:", err)
 	}
@@ -84,7 +85,7 @@ func TestPlaceOneOrderAndClossPosition2(t *testing.T) {
 }
 
 func TestRequestGetOrder(t *testing.T) {
-	data, err := client.Market.GetOrderInfo(OKXClient.ETH_USDT_SWAP, "447209241030561793")
+	data, err := client.Market.GetOrderInfo(OKXClient.ETH_USDT_SWAP, "447448860674363392")
 	if err != nil {
 		t.Error(err)
 	}
@@ -147,7 +148,15 @@ func TestOrderApi(t *testing.T) {
 }
 
 func TestRequestPlaceOneOrder(t *testing.T) {
-	data, err := client.Market.PlaceOrder(OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.BUY, OKXClient.LONG, OKXClient.MARKET, 10, 0)
+	data, err := client.Market.PlaceOrder(OKXClient.DOGE_USDT_SWAP, OKXClient.CROSS, OKXClient.SELL, OKXClient.SHORT, OKXClient.LIMIT, 100, 0.0832)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(data)
+}
+
+func TestRequestPlaceOneOrder2(t *testing.T) {
+	data, err := client.Market.PlaceOrder(OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.BUY, OKXClient.SHORT, OKXClient.MARKET, 100, 0)
 	if err != nil {
 		t.Error(err)
 	}

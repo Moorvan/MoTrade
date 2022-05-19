@@ -70,7 +70,7 @@ func (okx *OKX) DoGet(api string, params Params, response any) error {
 		return err
 	}
 
-	//log.Println(resp)
+	log.Println(resp)
 	if err != nil {
 		log.Errorln("Get Request", api, "FAIL", err.Error())
 		return err

@@ -172,7 +172,7 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInf
 	response := &struct {
 		Data []struct {
 			Pnl   float64 `json:"pnl,string"`
-			AvgPx float64 `json:"avgPx,string"`
+			AvgPx string  `json:"avgPx"`
 			State string  `json:"state"`
 			Fee   float64 `json:"fee,string"`
 			Sz    int     `json:"sz,string"`
@@ -186,11 +186,22 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*models.OrderInf
 		log.Errorln("GetOrderInfo error:", errors.New("response data is empty"))
 		return nil, errors.New("GetOrderInfo response data is empty")
 	}
-	//log.Println(response)
+	log.Println(response)
 	data := response.Data[0]
+	var avgPx float64
+	if data.AvgPx != "" {
+		var err error
+		avgPx, err = strconv.ParseFloat(data.AvgPx, 64)
+		if err != nil {
+			log.Errorln("GetOrderInfo response data is Error")
+			return nil, errors.New("GetOrderInfo response data is Error")
+		}
+	} else {
+		avgPx = 0
+	}
 	return &models.OrderInfo{
 		Pnl:   data.Pnl,
-		AvgPx: data.AvgPx,
+		AvgPx: avgPx,
 		State: data.State,
 		Fee:   data.Fee,
 		Size:  data.Sz,

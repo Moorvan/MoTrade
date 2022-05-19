@@ -2,6 +2,8 @@ package strategies
 
 import (
 	"MoTrade/OKXClient"
+	mo_errors "MoTrade/mo-errors"
+	"time"
 )
 
 type Order struct {
@@ -20,7 +22,7 @@ type Order struct {
 	Profit     float64
 }
 
-func NewOrder(trade *OKXClient.Trade, instId, tdMode, posSide, ordType string, size int, px float64) (*Order, error) {
+func NewOrder(trade *OKXClient.Trade, instId, tdMode, posSide, ordType string, size int, px float64, timeout time.Duration) (*Order, error) {
 	var side string
 	if posSide == OKXClient.LONG {
 		side = OKXClient.BUY
@@ -40,9 +42,49 @@ func NewOrder(trade *OKXClient.Trade, instId, tdMode, posSide, ordType string, s
 		PosSide:   posSide,
 		OpenOrdId: ordId,
 		Size:      size,
+		Profit:    0,
 	}
-	// TODO: Open success?
+	if err := order.watchOpenOrder(time.After(timeout)); err != nil {
+		return order, err
+	}
 	return order, nil
+}
+
+func (order *Order) watchOpenOrder(wait <-chan time.Time) error {
+	for {
+		select {
+		case <-wait:
+			if err := order.CancelOrder(); err != nil {
+				log.Alarm("CancelOrder error:", err)
+				return err
+			}
+			info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.OpenOrdId)
+			if err != nil {
+				log.Fatalln("GetOrderInfo error:", err)
+				return err
+			}
+			order.Size = info.Size
+			order.PriceIn = info.AvgPx
+			order.Profit += info.Fee
+			if order.Size == 0 {
+				order.IsFinished = true
+			}
+			order.IsStart = true
+			return &mo_errors.TimeoutError{}
+		default:
+		}
+		info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.OpenOrdId)
+		if err != nil {
+			log.Println("GetOrderInfo error:", err)
+			continue
+		}
+		if info.State == OKXClient.FILLED {
+			order.PriceIn = info.AvgPx
+			order.Profit += info.Fee
+			order.IsStart = true
+			return nil
+		}
+	}
 }
 
 func (order *Order) CancelOrder() error {
@@ -50,11 +92,10 @@ func (order *Order) CancelOrder() error {
 		log.Println("CancelOrder error:", err)
 		return err
 	}
-	// TODO: Cancel Success?
 	return nil
 }
 
-func (order *Order) CleanOrder(ordType string, px float64) error {
+func (order *Order) CleanOrder(ordType string, px float64, timeout time.Duration) error {
 	var side string
 	if order.PosSide == OKXClient.LONG {
 		side = OKXClient.SELL
@@ -67,6 +108,32 @@ func (order *Order) CleanOrder(ordType string, px float64) error {
 		return err
 	}
 	order.CloseOrdId = orderId
-	// TODO: Clean Success? Profit calculation.
+	if err := order.watchCleanOrder(time.After(timeout)); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (order *Order) watchCleanOrder(wait <-chan time.Time) error {
+	for {
+		select {
+		case <-wait:
+			log.Alarm("CleanOrder timeout!!")
+			return &mo_errors.TimeoutError{}
+		default:
+		}
+		info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.CloseOrdId)
+		if err != nil {
+			log.Println("GetOrderInfo error:", err)
+			continue
+		}
+		if info.State == OKXClient.FILLED {
+			order.Profit += info.Fee
+			order.Profit += info.Pnl
+			order.PriceOut = info.AvgPx
+			order.IsFinished = true
+			return nil
+		}
+	}
+
 }

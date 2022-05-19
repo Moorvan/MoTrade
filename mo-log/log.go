@@ -19,6 +19,14 @@ func (l logger) Errorln(v ...any) {
 	}
 }
 
+func (l logger) Alarm(v ...any) {
+	if Debug {
+		l.Logger.Fatalln(v...)
+	} else {
+		// TODO: alarm
+	}
+}
+
 var Log logger
 
 func init() {

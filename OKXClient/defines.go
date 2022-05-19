@@ -59,3 +59,11 @@ const (
 	LIMIT  = "limit"
 	MARKET = "market"
 )
+
+// Order State
+const (
+	CANCELED         = "canceled"
+	LIVE             = "live"
+	PARTIALLY_FILLED = "partially_filled"
+	FILLED           = "filled"
+)
