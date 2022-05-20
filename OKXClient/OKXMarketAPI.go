@@ -191,11 +191,11 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*OKXmodels.Order
 
 	response := &struct {
 		Data []struct {
-			Pnl   float64 `json:"pnl,string"`
-			AvgPx string  `json:"avgPx"`
-			State string  `json:"state"`
-			Fee   float64 `json:"fee,string"`
-			Sz    int     `json:"sz,string"`
+			Pnl    float64 `json:"pnl,string"`
+			AvgPx  string  `json:"avgPx"`
+			State  string  `json:"state"`
+			Fee    float64 `json:"fee,string"`
+			FillSz int     `json:"fillSz,string"`
 		}
 	}{}
 	if err := market.DoGet(api, params, response); err != nil {
@@ -224,6 +224,6 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*OKXmodels.Order
 		AvgPx: avgPx,
 		State: data.State,
 		Fee:   data.Fee,
-		Size:  data.Sz,
+		Size:  data.FillSz,
 	}, nil
 }

@@ -51,7 +51,6 @@ func NewOrder(trade *OKXClient.Trade, instType, instId, tdMode, posSide, ordType
 		OrdType:   ordType,
 		PosSide:   posSide,
 		OpenOrdId: ordId,
-		Size:      size,
 		UnitSize:  unitSize,
 		Profit:    0,
 	}
@@ -67,18 +66,6 @@ func (order *Order) watchOpenOrder(wait <-chan time.Time) {
 				log.Alarm("CancelOrder error:", err)
 				return
 			}
-			info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.OpenOrdId)
-			if err != nil {
-				log.Fatalln("GetOrderInfo error:", err)
-				return
-			}
-			order.Size = info.Size
-			order.PriceIn = info.AvgPx
-			order.Profit += info.Fee
-			if order.Size == 0 {
-				order.IsFinished = true
-			}
-			order.IsStart = true
 			return
 		default:
 		}
@@ -90,6 +77,7 @@ func (order *Order) watchOpenOrder(wait <-chan time.Time) {
 		if info.State == OKXClient.FILLED {
 			order.PriceIn = info.AvgPx
 			order.Profit += info.Fee
+			order.Size = info.Size
 			order.IsStart = true
 			return
 		}
@@ -101,11 +89,29 @@ func (order *Order) CancelOrder() error {
 		log.Println("CancelOrder error:", err)
 		return err
 	}
+	info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.OpenOrdId)
+	if err != nil {
+		log.Println("GetOrderInfo error:", err)
+		return err
+	}
+	order.Size = info.Size
+	order.PriceIn = info.AvgPx
+	order.Profit += info.Fee
+	if order.Size == 0 {
+		order.IsFinished = true
+	}
+	order.IsStart = true
 	return nil
 }
 
 func (order *Order) CleanOrder(ordType string, px float64, timeout time.Duration) error {
 	var side string
+	if order.IsFinished {
+		return nil
+	}
+	if err := order.waitForOrderStart(timeout, time.Second/3); err != nil {
+		return err
+	}
 	if order.PosSide == OKXClient.LONG {
 		side = OKXClient.SELL
 	} else {
@@ -113,12 +119,31 @@ func (order *Order) CleanOrder(ordType string, px float64, timeout time.Duration
 	}
 	orderId, err := order.Trade.Market.PlaceOrder(order.InstId, order.TdMode, side, order.PosSide, ordType, order.Size, px)
 	if err != nil {
-		log.Errorln("CleanOrder error:", err)
+		log.Alarm("CleanOrder error:", err)
 		return err
 	}
 	order.CloseOrdId = orderId
 	if err := order.watchCleanOrder(time.After(timeout)); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (order *Order) waitForOrderStart(timeout time.Duration, interval time.Duration) error {
+	for {
+		select {
+		case <-time.After(timeout):
+			log.Alarm("CleanOrder timeout, wait for order start")
+			return &mo_errors.TimeoutError{}
+		default:
+		}
+		if order.IsStart {
+			break
+		}
+		select {
+		case <-time.After(interval):
+			continue
+		}
 	}
 	return nil
 }
