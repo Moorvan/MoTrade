@@ -2,35 +2,44 @@ package strategies
 
 import (
 	"MoTrade/OKXClient"
+	mo_errors "MoTrade/mo-errors"
 	mlog "MoTrade/mo-log"
+	"sync"
 	"time"
 )
 
 var (
-	log = mlog.Log
+	log    = mlog.Log
+	record = mlog.PersistentRecord
 )
 
 type Strategy struct {
 	Trade      *OKXClient.Trade
 	Orders     []*Order
 	MaxOrder   int
-	InstId     string
-	InstType   string
-	TdMode     string
+	IsStart    chan struct{}
+	IsWatching bool
 	Profit     float64
 	ApprProfit float64
 }
 
-// TODO: test
+func NewStrategy(trade *OKXClient.Trade, maxOrder int) *Strategy {
+	return &Strategy{
+		Trade:      trade,
+		MaxOrder:   maxOrder,
+		IsStart:    make(chan struct{}),
+		IsWatching: false,
+		Profit:     0,
+		ApprProfit: 0,
+	}
+}
 
 func (strategy *Strategy) KillAllOrders() {
 	for _, order := range strategy.Orders {
 		if err := order.CleanOrder(OKXClient.MARKET, 0, 5*time.Second); err != nil {
 			log.Alarm("KillOrders Failed", err)
 		} else {
-			if err = log.WriteLog("killedOrders", order); err != nil {
-				log.Errorln("WriteLog Failed", err)
-			}
+			record.PrintStruct(order)
 		}
 		if order.IsFinished {
 			strategy.Profit += order.Profit
@@ -38,26 +47,41 @@ func (strategy *Strategy) KillAllOrders() {
 	}
 }
 
-func (strategy *Strategy) FillOneOrder(posSide string, size int, timeout time.Duration) (bool, error) {
+var once sync.Once
+
+func (strategy *Strategy) FillOneOrder(order *Order, timeout time.Duration) error {
 	if len(strategy.Orders) >= strategy.MaxOrder {
-		return false, nil
+		return mo_errors.FullError
 	}
-	order, err := NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, OKXClient.CROSS, posSide, OKXClient.MARKET, size, 0, timeout)
-	if err != nil {
-		return false, err
+	if err := order.Start(timeout); err != nil {
+		return err
 	}
 	strategy.Orders = append(strategy.Orders, order)
-	return true, nil
+	once.Do(func() {
+		strategy.IsStart <- struct{}{}
+	})
+	return nil
 }
 
-func (strategy *Strategy) FillOneOrderWithLimit(posSide string, size int, timeout time.Duration, limit float64) (bool, error) {
-	if len(strategy.Orders) >= strategy.MaxOrder {
-		return false, nil
+func (strategy *Strategy) Watching(interval time.Duration) {
+	strategy.IsWatching = true
+	select {
+	case <-strategy.IsStart:
 	}
-	order, err := NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, OKXClient.CROSS, posSide, OKXClient.LIMIT, size, limit, timeout)
-	if err != nil {
-		return false, err
+	for {
+		t := time.NewTimer(interval)
+		var sum float64 = 0
+		for _, order := range strategy.Orders {
+			if !order.IsWatching {
+				go order.Watching(interval)
+			}
+			sum += order.ApprProfit
+		}
+		strategy.ApprProfit = sum
+		log.Debugln("Sum Profit", strategy.ApprProfit)
+		select {
+		case <-t.C:
+			continue
+		}
 	}
-	strategy.Orders = append(strategy.Orders, order)
-	return true, nil
 }

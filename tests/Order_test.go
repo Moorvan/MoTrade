@@ -13,7 +13,7 @@ var (
 
 func PlaceOneOrder() {
 	var err error
-	order, err = strategies.NewOrder(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.LIMIT, 10, 2005, time.Second*10)
+	order, err = strategies.NewOrderAndStart(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.LIMIT, 10, 2180, time.Second*10)
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func TestPlaceOneOrderForTimeout(t *testing.T) {
 
 func TestPlaceOneOrderAndLossToClean(t *testing.T) {
 	var err error
-	order, err = strategies.NewOrder(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.MARKET, 20, 0, time.Second*10)
+	order, err = strategies.NewOrderAndStart(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.MARKET, 10, 0, time.Second*10)
 	if err != nil {
 		panic(err)
 	}

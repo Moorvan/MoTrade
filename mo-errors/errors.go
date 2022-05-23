@@ -1,13 +1,27 @@
 package mo_errors
 
-type NoResultError struct{}
+import "errors"
 
-func (e NoResultError) Error() string {
-	return "No Result"
-}
+//type NoResultError struct{}
+//
+//func (e *NoResultError) Error() string {
+//	return "No Result"
+//}
+//
+//type TimeoutError struct{}
+//
+//func (e *TimeoutError) Error() string {
+//	return "Timeout"
+//}
+//
+//type FullError struct{}
+//
+//func (e *FullError) Error() string {
+//	return "Full Error"
+//}
 
-type TimeoutError struct{}
-
-func (e TimeoutError) Error() string {
-	return "Timeout"
-}
+var (
+	NoResultError = errors.New("no Result")
+	TimeoutError  = errors.New("timeout")
+	FullError     = errors.New("full error")
+)

@@ -53,7 +53,7 @@ func (account *OKXAccountAPI) GetOneBalance(ccy string) (float64, error) {
 	if r, ok := res[ccy]; ok {
 		return r, nil
 	} else {
-		return 0, mo_errors.NoResultError{}
+		return 0, mo_errors.NoResultError
 	}
 }
 

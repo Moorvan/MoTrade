@@ -18,6 +18,7 @@ type Order struct {
 	PriceIn      float64
 	PriceOut     float64
 	Size         int
+	Px           float64
 	UnitSize     float64
 	IsStart      bool
 	IsFinished   bool
@@ -28,35 +29,57 @@ type Order struct {
 	IsProtect    bool
 }
 
-func NewOrder(trade *OKXClient.Trade, instType, instId, tdMode, posSide, ordType string, size int, px float64, timeout time.Duration) (*Order, error) {
-	var side string
-	if posSide == OKXClient.LONG {
-		side = OKXClient.BUY
-	} else {
-		side = OKXClient.SELL
-	}
-	ordId, err := trade.Market.PlaceOrder(instId, tdMode, side, posSide, ordType, size, px)
+func NewOrderAndStart(trade *OKXClient.Trade, instType, instId, tdMode, posSide, ordType string, size int, px float64, timeout time.Duration) (*Order, error) {
+	ord, err := NewOrder(trade, instType, instId, tdMode, posSide, ordType, size, px)
 	if err != nil {
-		log.Errorln("PlaceOrder error:", err)
 		return nil, err
 	}
+	err = ord.Start(timeout)
+	if err != nil {
+		return nil, err
+	}
+	return ord, nil
+}
+
+func NewOrder(trade *OKXClient.Trade, instType, instId, tdMode, posSide, ordType string, size int, px float64) (*Order, error) {
 	unitSize, err := trade.Market.GetTickerUnitSize(instType, instId)
 	if err != nil {
 		log.Errorln("GetTickerUnitSize error:", err)
 		return nil, err
 	}
 	order := &Order{
-		Trade:     trade,
-		InstId:    instId,
-		TdMode:    tdMode,
-		OrdType:   ordType,
-		PosSide:   posSide,
-		OpenOrdId: ordId,
-		UnitSize:  unitSize,
-		Profit:    0,
+		Trade:    trade,
+		InstId:   instId,
+		TdMode:   tdMode,
+		OrdType:  ordType,
+		PosSide:  posSide,
+		Size:     size,
+		Px:       px,
+		UnitSize: unitSize,
+		Profit:   0,
 	}
-	go order.watchOpenOrder(time.After(timeout))
 	return order, nil
+}
+
+func (order *Order) Start(timeout time.Duration) error {
+	if order.IsStart {
+		log.Errorln("Order is already started")
+		return nil
+	}
+	var side string
+	if order.PosSide == OKXClient.LONG {
+		side = OKXClient.BUY
+	} else {
+		side = OKXClient.SELL
+	}
+	ordId, err := order.Trade.Market.PlaceOrder(order.InstId, order.TdMode, side, order.PosSide, order.OrdType, order.Size, order.Px)
+	if err != nil {
+		log.Errorln("PlaceOrder error:", err)
+		return err
+	}
+	order.OpenOrdId = ordId
+	go order.watchOpenOrder(time.After(timeout))
+	return nil
 }
 
 func (order *Order) watchOpenOrder(wait <-chan time.Time) {
@@ -135,7 +158,7 @@ func (order *Order) waitForOrderStart(timeout time.Duration, interval time.Durat
 		select {
 		case <-time.After(timeout):
 			log.Alarm("CleanOrder timeout, wait for order start")
-			return &mo_errors.TimeoutError{}
+			return mo_errors.TimeoutError
 		default:
 		}
 		if order.IsStart {
@@ -154,7 +177,7 @@ func (order *Order) watchCleanOrder(wait <-chan time.Time) error {
 		select {
 		case <-wait:
 			log.Alarm("CleanOrder timeout!!")
-			return &mo_errors.TimeoutError{}
+			return mo_errors.TimeoutError
 		default:
 		}
 		info, err := order.Trade.Market.GetOrderInfo(order.InstId, order.CloseOrdId)
