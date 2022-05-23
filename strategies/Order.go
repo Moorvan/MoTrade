@@ -23,6 +23,7 @@ type Order struct {
 	IsFinished   bool
 	Profit       float64
 	ApprProfit   float64
+	IsWatching   bool
 	IsProfitable bool
 	IsProtect    bool
 }
@@ -171,11 +172,11 @@ func (order *Order) watchCleanOrder(wait <-chan time.Time) error {
 	}
 }
 
-func (order *Order) Protect(maxLoss float64, interval time.Duration) {
-	order.IsProtect = true
+func (order *Order) Watching(interval time.Duration) {
+	order.IsWatching = true
 	for {
 		t := time.NewTimer(interval)
-		log.PrintStruct(order)
+		log.DebugStruct(order)
 		if order.IsFinished {
 			return
 		}
@@ -204,22 +205,37 @@ func (order *Order) Protect(maxLoss float64, interval time.Duration) {
 		} else {
 			order.IsProfitable = false
 		}
+		log.Debugln("PriceIn:", order.PriceIn, "PriceNow", v, "Fee", fee, "Size", order.Size, "Unit", order.UnitSize)
+		log.Debugln("Now profit:", profit)
+		order.ApprProfit = profit
+		select {
+		case <-t.C:
+			continue
+		}
+	}
+}
+
+func (order *Order) Protect(maxLoss float64, interval time.Duration) {
+	order.IsProtect = true
+	if !order.IsWatching {
+		go order.Watching(interval)
+	}
+	for {
+		t := time.NewTimer(interval)
+		profit := order.ApprProfit
 		if -1*profit > maxLoss {
 			log.Println("Order", order.OpenOrdId, "[", order.InstId, "]", "LOSS PROTECTED!!!")
 			if err := order.CleanOrder(OKXClient.MARKET, 0, time.Second*5); err != nil {
 				if !order.IsFinished {
 					log.Alarm("Clean FAILED, in LOSS PROTECTED!!!")
 				}
-				log.Println("Clean FAILED, But Finished...")
+				log.Debugln("Clean FAILED, But Finished...")
 				return
 			}
-			log.Println("Clean SUCCESS")
-			log.PrintStruct(order)
+			log.Debugln("Clean SUCCESS")
+			log.DebugStruct(order)
 			return
 		}
-		log.Println("PriceIn:", order.PriceIn, "PriceNow", v, "Fee", fee)
-		log.Println("Now profit:", profit)
-		order.ApprProfit = profit
 		select {
 		case <-t.C:
 			continue

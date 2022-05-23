@@ -26,11 +26,11 @@ func TestPlaceOneOrderForTimeout(t *testing.T) {
 
 func TestPlaceOneOrderAndLossToClean(t *testing.T) {
 	var err error
-	order, err = strategies.NewOrder(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.MARKET, 5, 0, time.Second*10)
+	order, err = strategies.NewOrder(&client.Trade, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, OKXClient.SHORT, OKXClient.MARKET, 20, 0, time.Second*10)
 	if err != nil {
 		panic(err)
 	}
-	order.Protect(2, time.Second/2)
+	go order.Protect(2, time.Second/2)
 	select {}
 }
 
@@ -49,5 +49,4 @@ func TestCleanOrder(t *testing.T) {
 	}
 
 	log.Printf("%+v", order)
-
 }

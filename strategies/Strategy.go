@@ -21,10 +21,19 @@ type Strategy struct {
 	ApprProfit float64
 }
 
+// TODO: test
+
 func (strategy *Strategy) KillAllOrders() {
 	for _, order := range strategy.Orders {
 		if err := order.CleanOrder(OKXClient.MARKET, 0, 5*time.Second); err != nil {
 			log.Alarm("KillOrders Failed", err)
+		} else {
+			if err = log.WriteLog("killedOrders", order); err != nil {
+				log.Errorln("WriteLog Failed", err)
+			}
+		}
+		if order.IsFinished {
+			strategy.Profit += order.Profit
 		}
 	}
 }

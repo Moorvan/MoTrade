@@ -1,6 +1,7 @@
 package mlog
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -29,6 +30,31 @@ func (l logger) Alarm(v ...any) {
 
 func (l logger) PrintStruct(v any) {
 	l.Logger.Printf("%+v", v)
+}
+
+func (l logger) Debugln(v ...any) {
+	if Debug {
+		l.Logger.Println(v)
+	}
+}
+
+func (l logger) DebugStruct(v any) {
+	if Debug {
+		l.Logger.Printf("%+v", v)
+	}
+}
+
+func (l logger) WriteLog(path string, v any) error {
+	f, err := os.OpenFile(path+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.FileMode(0644))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write([]byte(fmt.Sprintf("%+v\n", v)))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 var Log logger
