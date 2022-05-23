@@ -245,6 +245,15 @@ func (order *Order) Protect(maxLoss float64, interval time.Duration) {
 	}
 	for {
 		t := time.NewTimer(interval)
+		if order.IsFinished {
+			return
+		}
+		if !order.IsStart {
+			select {
+			case <-t.C:
+				continue
+			}
+		}
 		profit := order.ApprProfit
 		if -1*profit > maxLoss {
 			log.Println("Order", order.OpenOrdId, "[", order.InstId, "]", "LOSS PROTECTED!!!")

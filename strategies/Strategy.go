@@ -4,6 +4,7 @@ import (
 	"MoTrade/OKXClient"
 	mo_errors "MoTrade/mo-errors"
 	mlog "MoTrade/mo-log"
+	"github.com/thoas/go-funk"
 	"sync"
 	"time"
 )
@@ -78,7 +79,10 @@ func (strategy *Strategy) Watching(interval time.Duration) {
 			sum += order.ApprProfit
 		}
 		strategy.ApprProfit = sum
-		log.Debugln("Sum Profit", strategy.ApprProfit)
+		log.Debugln("Sum Profit", strategy.ApprProfit, "Order Count", len(strategy.Orders))
+		strategy.Orders = funk.Filter(strategy.Orders, func(order *Order) bool {
+			return !order.IsFinished
+		}).([]*Order)
 		select {
 		case <-t.C:
 			continue
