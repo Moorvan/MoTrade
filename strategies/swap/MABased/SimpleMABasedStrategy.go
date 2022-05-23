@@ -35,7 +35,8 @@ func (strategy *SimpleMABasedStrategy) Run() {
 	for {
 		select {
 		case <-strategy.LongPoint:
-			order, err := strategy.newOrder()
+			strategy.KillAllShortOrders(3 * time.Second)
+			order, err := strategy.newLongOrder()
 			if err != nil {
 				log.Println(err)
 			}
@@ -43,22 +44,40 @@ func (strategy *SimpleMABasedStrategy) Run() {
 				log.Println(err)
 			}
 		case <-strategy.ShortPoint:
-			strategy.KillAllOrders()
+			strategy.KillAllLongOrders(3 * time.Second)
+			order, err := strategy.newShortOrder()
+			if err != nil {
+				log.Println(err)
+			}
+			if err = strategy.FillOneOrder(order, time.Second/2); err != nil {
+				log.Println(err)
+			}
+
 		}
 	}
 
 }
 
 func (strategy *SimpleMABasedStrategy) LongPointWatching() {
-
+	// TODO: Find when should we buy
 }
 
 func (strategy *SimpleMABasedStrategy) ShortPointWatching() {
-
+	// TODO: Find when should we sell
 }
 
-func (strategy *SimpleMABasedStrategy) newOrder() (*strategies.Order, error) {
+func (strategy *SimpleMABasedStrategy) newLongOrder() (*strategies.Order, error) {
 	order, err := strategies.NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, strategy.TdMode, OKXClient.LONG, OKXClient.MARKET, strategy.Size, 0)
+	go order.Protect(0.2, time.Second/2)
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+	return order, nil
+}
+
+func (strategy *SimpleMABasedStrategy) newShortOrder() (*strategies.Order, error) {
+	order, err := strategies.NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, strategy.TdMode, OKXClient.SHORT, OKXClient.MARKET, strategy.Size, 0)
 	go order.Protect(0.2, time.Second/2)
 	if err != nil {
 		log.Fatalln(err)

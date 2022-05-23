@@ -35,15 +35,51 @@ func NewStrategy(trade *OKXClient.Trade, maxOrder int) *Strategy {
 	}
 }
 
-func (strategy *Strategy) KillAllOrders() {
+func (strategy *Strategy) KillAllOrders(timeout time.Duration) {
 	for _, order := range strategy.Orders {
-		if err := order.CleanOrder(OKXClient.MARKET, 0, 5*time.Second); err != nil {
+		if err := order.CleanOrder(OKXClient.MARKET, 0, timeout); err != nil {
 			log.Alarm("KillOrders Failed", err)
 		} else {
 			record.PrintStruct(order)
 		}
 		if order.IsFinished {
 			strategy.Profit += order.Profit
+		} else {
+			log.Fatalln("Can't reach here")
+		}
+	}
+}
+
+func (strategy *Strategy) KillAllLongOrders(timeout time.Duration) {
+	for _, order := range strategy.Orders {
+		if order.PosSide == OKXClient.LONG {
+			if err := order.CleanOrder(OKXClient.MARKET, 0, timeout); err != nil {
+				log.Alarm("KillOrders Failed", err)
+			} else {
+				record.PrintStruct(order)
+			}
+			if order.IsFinished {
+				strategy.Profit += order.Profit
+			} else {
+				log.Fatalln("Can't reach here")
+			}
+		}
+	}
+}
+
+func (strategy *Strategy) KillAllShortOrders(timeout time.Duration) {
+	for _, order := range strategy.Orders {
+		if order.PosSide == OKXClient.SHORT {
+			if err := order.CleanOrder(OKXClient.MARKET, 0, timeout); err != nil {
+				log.Alarm("KillOrders Failed", err)
+			} else {
+				record.PrintStruct(order)
+			}
+			if order.IsFinished {
+				strategy.Profit += order.Profit
+			} else {
+				log.Fatalln("Can't reach here")
+			}
 		}
 	}
 }
