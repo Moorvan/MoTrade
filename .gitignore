@@ -3,3 +3,4 @@
 /output.log
 /config.yaml
 /config_sim.yaml
+**/orders.log
