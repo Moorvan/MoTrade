@@ -11,10 +11,12 @@ var log = mlog.Log
 
 type SimpleMABasedStrategy struct {
 	strategies.Strategy
-	InstType string
-	InstId   string
-	TdMode   string
-	Size     int
+	InstType   string
+	InstId     string
+	TdMode     string
+	Size       int
+	LongPoint  chan struct{}
+	ShortPoint chan struct{}
 }
 
 func NewMABasedStrategy(trade *OKXClient.Trade, maxOrder int, instType, instId, tdMode string, size int) *SimpleMABasedStrategy {
@@ -30,17 +32,29 @@ func NewMABasedStrategy(trade *OKXClient.Trade, maxOrder int, instType, instId, 
 }
 
 func (strategy *SimpleMABasedStrategy) Run() {
-	order, err := strategy.newOrder()
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-	if err = strategy.FillOneOrder(order, time.Second/2); err != nil {
-		log.Fatalln(err)
-		return
+	for {
+		select {
+		case <-strategy.LongPoint:
+			order, err := strategy.newOrder()
+			if err != nil {
+				log.Println(err)
+			}
+			if err = strategy.FillOneOrder(order, time.Second/2); err != nil {
+				log.Println(err)
+			}
+		case <-strategy.ShortPoint:
+			strategy.KillAllOrders()
+		}
 	}
 
-	select {}
+}
+
+func (strategy *SimpleMABasedStrategy) LongPointWatching() {
+
+}
+
+func (strategy *SimpleMABasedStrategy) ShortPointWatching() {
+
 }
 
 func (strategy *SimpleMABasedStrategy) newOrder() (*strategies.Order, error) {
