@@ -12,37 +12,41 @@ var log = mlog.Log
 
 type SimpleMABasedStrategy struct {
 	strategies.Strategy
-	InstType   string
-	InstId     string
-	TdMode     string
-	Size       int
-	Bar        string
-	Limit      int
-	MAs        *list.List // float64
-	Prices     *list.List // float64
-	TrendUnit  float64
-	Observable float64
-	SharpUnit  float64
-	LongPoint  chan struct{}
-	ShortPoint chan struct{}
+	InstType    string
+	InstId      string
+	TdMode      string
+	Size        int
+	Bar         string
+	Limit       int
+	MAs         *list.List // float64
+	Prices      *list.List // float64
+	TrendUnit   float64
+	Observable  float64
+	SharpUnit   float64
+	Protected   bool
+	ProtectLoss float64
+	LongPoint   chan struct{}
+	ShortPoint  chan struct{}
 }
 
-func NewMABasedStrategy(trade *OKXClient.Trade, maxOrder int, instType, instId, tdMode string, size int, bar string, limit int) *SimpleMABasedStrategy {
+func NewMABasedStrategy(trade *OKXClient.Trade, maxOrder int, instType, instId, tdMode string, size int, bar string, limit int, protected bool, protectLoss float64) *SimpleMABasedStrategy {
 	strategy := &SimpleMABasedStrategy{
-		Strategy:   *strategies.NewStrategy(trade, maxOrder),
-		InstType:   instType,
-		InstId:     instId,
-		TdMode:     tdMode,
-		Size:       size,
-		Bar:        bar,
-		Limit:      limit,
-		MAs:        list.New(),
-		Prices:     list.New(),
-		TrendUnit:  1,
-		Observable: 0.2,
-		SharpUnit:  10,
-		LongPoint:  make(chan struct{}),
-		ShortPoint: make(chan struct{}),
+		Strategy:    *strategies.NewStrategy(trade, maxOrder),
+		InstType:    instType,
+		InstId:      instId,
+		TdMode:      tdMode,
+		Size:        size,
+		Bar:         bar,
+		Limit:       limit,
+		MAs:         list.New(),
+		Prices:      list.New(),
+		TrendUnit:   1,
+		Observable:  0.2,
+		SharpUnit:   10,
+		Protected:   protected,
+		ProtectLoss: protectLoss,
+		LongPoint:   make(chan struct{}),
+		ShortPoint:  make(chan struct{}),
 	}
 	go strategy.Watching(time.Second / 2)
 	return strategy
@@ -165,7 +169,8 @@ func (strategy *SimpleMABasedStrategy) longOrShort() (int, error) {
 	} else if price0-price2 > strategy.TrendUnit {
 		priceTrende = -1
 	}
-	log.Debugln("maTrade:", maTrende, "priceTrade:", priceTrende)
+	log.Debugln("ma0:", ma0, "ma1:", ma1, "ma2:", ma2, "dma:", dma, "maTrende:", maTrende)
+	log.Debugln("price0:", price0, "price1:", price1, "price2:", price2, "dprice:", dprice, "priceTrende:", priceTrende)
 
 	if maTrende == 1 && priceTrende == 1 && price1-ma1 < strategy.Observable && price2-ma2 >= strategy.Observable {
 		return 1, nil
@@ -195,7 +200,9 @@ func (strategy *SimpleMABasedStrategy) longOrShort() (int, error) {
 
 func (strategy *SimpleMABasedStrategy) newLongOrder() (*strategies.Order, error) {
 	order, err := strategies.NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, strategy.TdMode, OKXClient.LONG, OKXClient.MARKET, strategy.Size, 0)
-	go order.Protect(0.2, time.Second/2)
+	if strategy.Protected {
+		go order.Protect(strategy.ProtectLoss, time.Second/2)
+	}
 	if err != nil {
 		log.Fatalln(err)
 		return nil, err
@@ -205,7 +212,9 @@ func (strategy *SimpleMABasedStrategy) newLongOrder() (*strategies.Order, error)
 
 func (strategy *SimpleMABasedStrategy) newShortOrder() (*strategies.Order, error) {
 	order, err := strategies.NewOrder(strategy.Trade, strategy.InstType, strategy.InstId, strategy.TdMode, OKXClient.SHORT, OKXClient.MARKET, strategy.Size, 0)
-	go order.Protect(0.2, time.Second/2)
+	if strategy.Protected {
+		go order.Protect(strategy.ProtectLoss, time.Second/2)
+	}
 	if err != nil {
 		log.Fatalln(err)
 		return nil, err

@@ -42,9 +42,7 @@ func (strategy *Strategy) KillAllOrders(timeout time.Duration) {
 		} else {
 			record.PrintStruct(order)
 		}
-		if order.IsFinished {
-			strategy.Profit += order.Profit
-		} else {
+		if !order.IsFinished {
 			log.Fatalln("Can't reach here")
 		}
 	}
@@ -58,9 +56,7 @@ func (strategy *Strategy) KillAllLongOrders(timeout time.Duration) {
 			} else {
 				record.PrintStruct(order)
 			}
-			if order.IsFinished {
-				strategy.Profit += order.Profit
-			} else {
+			if !order.IsFinished {
 				log.Fatalln("Can't reach here")
 			}
 		}
@@ -117,6 +113,9 @@ func (strategy *Strategy) Watching(interval time.Duration) {
 		strategy.ApprProfit = sum
 		log.Debugln("SumApprProfit", strategy.ApprProfit, "SumProfit", strategy.Profit, "Order Count", len(strategy.Orders))
 		strategy.Orders = funk.Filter(strategy.Orders, func(order *Order) bool {
+			if order.IsFinished {
+				strategy.Profit += order.Profit
+			}
 			return !order.IsFinished
 		}).([]*Order)
 		select {

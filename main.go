@@ -17,7 +17,7 @@ var (
 func main() {
 	global.GB_VP = core.Viper(configPath)
 	global.GB_CLIENT = core.NewOKX()
-	strategy := MABased.NewMABasedStrategy(&global.GB_CLIENT.Trade, 3, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, 1, OKXClient.MINUTE_1, 5)
+	strategy := MABased.NewMABasedStrategy(&global.GB_CLIENT.Trade, 3, OKXClient.SWAP, OKXClient.ETH_USDT_SWAP, OKXClient.CROSS, 1, OKXClient.MINUTE_1, 5, true, 2)
 	strategy.Run(time.Second)
 
 }
