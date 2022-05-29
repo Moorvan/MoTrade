@@ -173,26 +173,32 @@ func (strategy *SimpleMABasedStrategy) longOrShort() (int, error) {
 	log.Debugln("price0:", price0, "price1:", price1, "price2:", price2, "dprice:", dprice, "priceTrende:", priceTrende)
 
 	if maTrende == 1 && priceTrende == 1 && price1-ma1 < strategy.Observable && price2-ma2 >= strategy.Observable {
+		log.Debugln("Long 1: Up Up go")
 		return 1, nil
 	}
 
 	if maTrende == 1 && priceTrende == -1 && price2-ma2 > strategy.Observable && price2-ma2 < 2*strategy.Observable {
+		log.Debugln("Long 2: Up Down go")
 		return 1, nil
 	}
 
 	if maTrende == 1 && price1-ma1 > strategy.Observable && ma2-price2 > strategy.Observable && price1-price2 > strategy.SharpUnit {
+		log.Debugln("Long 3: SharpDown go")
 		return 1, nil
 	}
 
 	if maTrende != 1 && priceTrende == -1 && ma1-price1 < strategy.Observable && ma2-price2 >= strategy.Observable {
+		log.Debugln("Short 1: Down Down run")
 		return -1, nil
 	}
 
 	if priceTrende == 1 && ma1-price1 > strategy.Observable && ma2-price2 < 2*strategy.Observable && ma2-price2 > strategy.Observable {
+		log.Debugln("Short 2: Down Up run")
 		return -1, nil
 	}
 
 	if priceTrende == 1 && maTrende == 1 && dprice-dma > strategy.SharpUnit {
+		log.Debugln("Short 3: SharpUp run")
 		return -1, nil
 	}
 	return 0, nil
