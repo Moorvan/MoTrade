@@ -115,7 +115,7 @@ func (strategy *Strategy) Watching(interval time.Duration) {
 			sum += order.ApprProfit
 		}
 		strategy.ApprProfit = sum
-		log.Debugln("Sum Profit", strategy.ApprProfit, "Order Count", len(strategy.Orders))
+		log.Debugln("SumApprProfit", strategy.ApprProfit, "SumProfit", strategy.Profit, "Order Count", len(strategy.Orders))
 		strategy.Orders = funk.Filter(strategy.Orders, func(order *Order) bool {
 			return !order.IsFinished
 		}).([]*Order)

@@ -5,6 +5,7 @@ import (
 	"MoTrade/core"
 	mlog "MoTrade/mo-log"
 	"testing"
+	"time"
 )
 
 var (
@@ -19,6 +20,42 @@ var (
 func init() {
 	core.Viper("../config_sim.yaml")
 	client = core.NewOKX()
+}
+
+func TestDuration(t *testing.T) {
+	var err error
+	_, err = time.ParseDuration(OKXClient.MINUTE_1)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.MINUTE_3)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.MINUTE_5)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.MINUTE_15)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.MINUTE_30)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.HOUR_1)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.HOUR_2)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = time.ParseDuration(OKXClient.HOUR_4)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestTickerApi(t *testing.T) {
@@ -67,7 +104,7 @@ func TestGetTickerValue(t *testing.T) {
 }
 
 func TestRequestMA(t *testing.T) {
-	data, err := client.Market.GetMA(OKXClient.DOGE_USDT_SWAP, OKXClient.MINUTE_1, 20, 1)
+	data, err := client.Market.GetMA(OKXClient.ETH_USDT_SWAP, OKXClient.MINUTE_1, 5, 1)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

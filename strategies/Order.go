@@ -199,7 +199,7 @@ func (order *Order) Watching(interval time.Duration) {
 	order.IsWatching = true
 	for {
 		t := time.NewTimer(interval)
-		log.DebugStruct(order)
+		//log.DebugStruct(order)
 		if order.IsFinished {
 			return
 		}
@@ -228,8 +228,8 @@ func (order *Order) Watching(interval time.Duration) {
 		} else {
 			order.IsProfitable = false
 		}
-		log.Debugln("PriceIn:", order.PriceIn, "PriceNow", v, "Fee", fee, "Size", order.Size, "Unit", order.UnitSize)
-		log.Debugln("Now profit:", profit)
+		//log.Debugln("PriceIn:", order.PriceIn, "PriceNow", v, "Fee", fee, "Size", order.Size, "Unit", order.UnitSize)
+		//log.Debugln("Now profit:", profit)
 		order.ApprProfit = profit
 		select {
 		case <-t.C:

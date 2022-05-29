@@ -8,7 +8,7 @@ import (
 )
 
 type MarketAPI interface {
-	GetMA(instId, bar string, limit int, before time.Duration) (float64, error)
+	GetMA(instId, bar string, limit int, before int) (float64, error)
 	PlaceOrder(instId, tdMode, side, posSide, ordType string, size int, px float64) (ordId string, err error)
 	CancelOrder(instId, ordId string) error
 	ClosePosition(instId, posSide, tradeMode string) error
@@ -21,9 +21,10 @@ type OKXMarketAPI struct {
 	*OKX
 }
 
-func (market *OKXMarketAPI) GetMA(instId, bar string, limit int, before time.Duration) (float64, error) {
+func (market *OKXMarketAPI) GetMA(instId, bar string, limit int, before int) (float64, error) {
 	api := "/api/v5/market/candles"
-	ts := time.Now().Add(-1 * before).UnixMilli()
+	dur, _ := time.ParseDuration(bar)
+	ts := time.Now().Add(-dur * time.Duration(before)).UnixMilli()
 	params := ParamsBuilder().Set("instId", instId).Set("bar", bar).Set("limit", strconv.Itoa(limit)).Set("after", strconv.FormatInt(ts, 10))
 
 	response := &struct {
@@ -34,8 +35,8 @@ func (market *OKXMarketAPI) GetMA(instId, bar string, limit int, before time.Dur
 		return 0, err
 	}
 
-	log.Println(response)
-	log.Println(len(response.Data))
+	//log.Println(response)
+	//log.Println(len(response.Data))
 	l := len(response.Data)
 	sum := 0.0
 	for _, v := range response.Data {
@@ -206,7 +207,7 @@ func (market *OKXMarketAPI) GetOrderInfo(instId, ordId string) (*OKXmodels.Order
 		log.Errorln("GetOrderInfo error:", errors.New("response data is empty"))
 		return nil, errors.New("GetOrderInfo response data is empty")
 	}
-	log.Println(response)
+	//log.Println(response)
 	data := response.Data[0]
 	var avgPx float64
 	if data.AvgPx != "" {
