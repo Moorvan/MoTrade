@@ -52,6 +52,8 @@ func NewMABasedStrategy(trade *OKXClient.Trade, maxOrder int, instType, instId, 
 	return strategy
 }
 
+// TODO: 1. 下单粘在一起, 2. 回撤是否及时
+
 func (strategy *SimpleMABasedStrategy) Run(interval time.Duration) {
 
 	if err := strategy.initLists(); err != nil {
@@ -73,6 +75,7 @@ func (strategy *SimpleMABasedStrategy) Run(interval time.Duration) {
 			if err = strategy.FillOneOrder(order, time.Second/2); err != nil {
 				log.Println(err)
 			}
+			strategy.Side = OKXClient.LONG
 		case <-strategy.ShortPoint:
 			log.Debugln("Short..")
 			strategy.KillAllLongOrders(3 * time.Second)
@@ -83,6 +86,7 @@ func (strategy *SimpleMABasedStrategy) Run(interval time.Duration) {
 			if err = strategy.FillOneOrder(order, time.Second/2); err != nil {
 				log.Println(err)
 			}
+			strategy.Side = OKXClient.SHORT
 		}
 	}
 }

@@ -22,6 +22,7 @@ type Strategy struct {
 	IsWatching bool
 	Profit     float64
 	ApprProfit float64
+	Side       string
 }
 
 func NewStrategy(trade *OKXClient.Trade, maxOrder int) *Strategy {
@@ -111,7 +112,7 @@ func (strategy *Strategy) Watching(interval time.Duration) {
 			sum += order.ApprProfit
 		}
 		strategy.ApprProfit = sum
-		log.Debugln("SumApprProfit", strategy.ApprProfit, "SumProfit", strategy.Profit, "Order Count", len(strategy.Orders))
+		log.Debugln("SumApprProfit", strategy.ApprProfit, "SumProfit", strategy.Profit, "Order Count", len(strategy.Orders), "Side", strategy.Side)
 		strategy.Orders = funk.Filter(strategy.Orders, func(order *Order) bool {
 			if order.IsFinished {
 				strategy.Profit += order.Profit
